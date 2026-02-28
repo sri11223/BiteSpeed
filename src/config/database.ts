@@ -35,7 +35,7 @@ if (config.env !== 'production') {
  */
 export async function disconnectDatabase(): Promise<void> {
   logger.info('Disconnecting from database…');
-  await prisma.disconnect();
+  await prisma.$disconnect();
 }
 
 /**

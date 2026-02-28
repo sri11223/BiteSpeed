@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { ContactController } from '../controllers/contact.controller.ts';
+import { ContactController } from '../controllers/contact.controller';
 import { validateIdentifyRequest } from '../middlewares/validator';
 
 export function createContactRoutes(controller: ContactController): Router {
