@@ -1,31 +1,27 @@
 # Dependencies
 node_modules/
 
-# Build output
+# Build outputs
 dist/
+build/
+coverage/
 
-# Environment files
+# Environment
 .env
 .env.local
-.env.production
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-logs/
-*.log
-
-# Testing
-coverage/
-
 # Prisma
-prisma/migrations/
+backend/prisma/*.db
 
-# Docker
-docker-compose.override.yml
+# Logs
+*.log
