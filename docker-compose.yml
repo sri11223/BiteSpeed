@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: bitespeed-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bitespeed
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Application ─────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      target: production
+    container_name: bitespeed-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/bitespeed?schema=public
+    ports:
+      - '3000:3000'
+    command: >
+      sh -c "npx prisma migrate deploy && node dist/server.js"
+
+volumes:
+  postgres_data:
