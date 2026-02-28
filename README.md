@@ -135,8 +135,63 @@ docker-compose up --build
 ### Running Tests
 
 ```bash
+# Run all tests (unit + integration) with coverage
 npm test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only integration tests (HTTP endpoint tests)
+npm run test:integration
+
+# Run tests in watch mode
+npm run test:watch
 ```
+
+### Load Testing
+
+```bash
+# Start the server first
+npm run dev
+
+# In another terminal, run load tests
+npm run load-test
+
+# Or target a specific URL
+npx ts-node scripts/load-test.ts http://your-server:3000
+```
+
+The load test runs 4 scenarios:
+1. **Health endpoint baseline** — GET /health (10 connections, 10s)
+2. **New contact creation** — POST /identify with unique payloads (10 connections, 10s)
+3. **Existing contact lookup** — POST /identify with repeated payload (10 connections, 10s)
+4. **High concurrency stress** — POST /identify (50 connections, 15s)
+
+---
+
+## Test Coverage
+
+| Test Suite | Tests | Coverage |
+|-----------|-------|----------|
+| **Unit Tests** (`contact.service.test.ts`) | 23 tests | 98.75% lines on service layer |
+| **Integration Tests** (`identify.integration.test.ts`) | 25 tests | Full HTTP pipeline |
+| **Total** | **48 tests** | **95%+ overall** |
+
+Test scenarios covered:
+- New primary contact creation (email only, phone only, both)
+- Secondary contact creation (new email + existing phone, and vice versa)
+- Primary contact merging (oldest wins, 2-way and 3-way merges)
+- Orphaned secondary re-linking after merge
+- Exact duplicate/idempotent request handling
+- Deep contact chains (3+ levels)
+- Response ordering (primary data first)
+- Email/phone deduplication in response
+- Null field handling
+- Phone number type coercion (number → string)
+- Whitespace trimming
+- Validation errors (empty body, null fields, invalid email)
+- HTTP 404 for unknown routes
+- Health endpoint verification
 
 ---
 
@@ -166,7 +221,11 @@ src/
 ├── app.ts                # Express app factory (composition root)
 └── server.ts             # Bootstrap & graceful shutdown
 tests/
-└── contact.service.test.ts  # Unit tests with in-memory mock repository
+├── contact.service.test.ts  # 23 unit tests with in-memory mock repository
+└── integration/
+    └── identify.integration.test.ts  # 25 HTTP integration tests with supertest
+scripts/
+└── load-test.ts              # Autocannon-based load testing (4 scenarios)
 ```
 
 ---
@@ -210,7 +269,8 @@ Or use the included `render.yaml` for [Blueprint deploys](https://render.com/doc
 | **Zod** | Runtime request validation |
 | **Winston** | Structured logging (JSON in prod, pretty in dev) |
 | **Helmet** | Security headers |
-| **Jest** | Unit testing with in-memory mocks |
+| **Jest + Supertest** | Unit & integration testing with coverage |
+| **Autocannon** | HTTP load testing |
 | **Docker** | Containerised deployment |
 
 ---

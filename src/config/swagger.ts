@@ -34,6 +34,57 @@ This API links all those identities together and returns a **consolidated contac
 | **Primary Contact** | The oldest contact in a linked cluster |
 | **Secondary Contact** | A contact linked to a primary via \`linkedId\` |
 | **Cluster** | All contacts (primary + secondaries) that belong to the same person |
+
+## Algorithm Flow
+
+\`\`\`
+Request (email, phone)
+    ↓
+Find all contacts matching email OR phone
+    ↓
+┌── No matches? → Create new primary → Return
+├── One primary? → Check for new info → Maybe create secondary → Return cluster
+└── Multiple primaries? → Merge (oldest wins) → Maybe create secondary → Return cluster
+\`\`\`
+
+## Database Schema
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Auto-increment primary key |
+| phoneNumber | VARCHAR | Customer phone number (nullable) |
+| email | VARCHAR | Customer email address (nullable) |
+| linkedId | INT (FK) | Points to the primary contact (null for primaries) |
+| linkPrecedence | ENUM | \`primary\` or \`secondary\` |
+| createdAt | TIMESTAMP | Record creation time |
+| updatedAt | TIMESTAMP | Last update time |
+| deletedAt | TIMESTAMP | Soft-delete timestamp (nullable) |
+
+## Examples
+
+### Example 1: First purchase by a new customer
+\`\`\`json
+Request:  { "email": "lorraine@hillvalley.edu", "phoneNumber": "123456" }
+Response: { "contact": { "primaryContatctId": 1, "emails": ["lorraine@hillvalley.edu"], "phoneNumbers": ["123456"], "secondaryContactIds": [] } }
+\`\`\`
+
+### Example 2: Same customer, different email
+\`\`\`json
+Request:  { "email": "mcfly@hillvalley.edu", "phoneNumber": "123456" }
+Response: { "contact": { "primaryContatctId": 1, "emails": ["lorraine@hillvalley.edu", "mcfly@hillvalley.edu"], "phoneNumbers": ["123456"], "secondaryContactIds": [23] } }
+\`\`\`
+
+### Example 3: Request bridges two separate customers (merge)
+\`\`\`json
+Request:  { "email": "george@hillvalley.edu", "phoneNumber": "717171" }
+→ Contact #11 (george, 919191, primary) + Contact #27 (biffsucks, 717171, primary)
+→ #27 becomes secondary of #11 (oldest wins)
+Response: { "contact": { "primaryContatctId": 11, "emails": ["george@hillvalley.edu", "biffsucks@hillvalley.edu"], "phoneNumbers": ["919191", "717171"], "secondaryContactIds": [27] } }
+\`\`\`
+
+## Rate Limiting
+- Default: 100 requests per 15-minute window per IP
+- Configurable via \`RATE_LIMIT_WINDOW_MS\` and \`RATE_LIMIT_MAX_REQUESTS\` env vars
     `,
     contact: {
       name: 'Bitespeed Support',

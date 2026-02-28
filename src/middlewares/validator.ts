@@ -19,10 +19,11 @@ import { ValidationError } from '../types';
 export const identifyRequestSchema = z.object({
   email: z
     .string()
-    .email('Invalid email format')
+    .transform((val) => val.trim())
+    .pipe(z.string().email('Invalid email format'))
     .nullable()
     .optional()
-    .transform((val) => val?.trim() || null),
+    .transform((val) => val || null),
 
   phoneNumber: z
     .union([z.string(), z.number()])

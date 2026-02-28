@@ -442,4 +442,246 @@ describe('ContactService', () => {
       expect(contact11?.linkedId).toBe(1);
     });
   });
+
+  // ── Scenario 9: Idempotent repeated requests ──────────────────────────
+
+  describe('idempotent requests', () => {
+    it('should not create duplicates on repeated identical requests', async () => {
+      // First call creates the primary
+      const first = await service.identify({
+        email: 'repeat@test.com',
+        phoneNumber: '999',
+      });
+      expect(first.contact.secondaryContactIds).toEqual([]);
+
+      // Second identical call should return the same result with no new records
+      const second = await service.identify({
+        email: 'repeat@test.com',
+        phoneNumber: '999',
+      });
+      expect(second.contact.primaryContatctId).toBe(first.contact.primaryContatctId);
+      expect(second.contact.secondaryContactIds).toEqual([]);
+      expect(repo.getAll().length).toBe(1);
+    });
+
+    it('should be idempotent for partial match requests too', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'a@test.com',
+          phoneNumber: '111',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+        {
+          id: 2,
+          email: 'b@test.com',
+          phoneNumber: '111',
+          linkedId: 1,
+          linkPrecedence: LinkPrecedence.SECONDARY,
+          createdAt: new Date('2023-01-02'),
+        },
+      ]);
+
+      // Request with already-existing secondary info
+      const result = await service.identify({
+        email: 'b@test.com',
+        phoneNumber: '111',
+      });
+
+      expect(result.contact.primaryContatctId).toBe(1);
+      // No new contacts should be created
+      expect(repo.getAll().length).toBe(2);
+    });
+  });
+
+  // ── Scenario 10: Multiple fields — new email + existing phone ─────────
+
+  describe('secondary creation edge cases', () => {
+    it('should not create secondary when only phone is provided and already exists', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'a@test.com',
+          phoneNumber: '111',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: null,
+        phoneNumber: '111',
+      });
+
+      expect(result.contact.primaryContatctId).toBe(1);
+      expect(repo.getAll().length).toBe(1); // No new contact
+    });
+
+    it('should not create secondary when only email is provided and already exists', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'a@test.com',
+          phoneNumber: '111',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: 'a@test.com',
+        phoneNumber: null,
+      });
+
+      expect(result.contact.primaryContatctId).toBe(1);
+      expect(repo.getAll().length).toBe(1);
+    });
+  });
+
+  // ── Scenario 11: Primary data comes first in response arrays ──────────
+
+  describe('response ordering', () => {
+    it('should list primary email first even when querying via secondary', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'primary@test.com',
+          phoneNumber: '100',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+        {
+          id: 2,
+          email: 'secondary@test.com',
+          phoneNumber: '200',
+          linkedId: 1,
+          linkPrecedence: LinkPrecedence.SECONDARY,
+          createdAt: new Date('2023-02-01'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: 'secondary@test.com',
+        phoneNumber: null,
+      });
+
+      expect(result.contact.emails[0]).toBe('primary@test.com');
+      expect(result.contact.phoneNumbers[0]).toBe('100');
+    });
+
+    it('should deduplicate emails and phones in response', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'shared@test.com',
+          phoneNumber: '111',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+        {
+          id: 2,
+          email: 'shared@test.com',
+          phoneNumber: '222',
+          linkedId: 1,
+          linkPrecedence: LinkPrecedence.SECONDARY,
+          createdAt: new Date('2023-01-02'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: 'shared@test.com',
+        phoneNumber: null,
+      });
+
+      // "shared@test.com" should only appear once
+      const emailCount = result.contact.emails.filter((e) => e === 'shared@test.com').length;
+      expect(emailCount).toBe(1);
+      expect(result.contact.phoneNumbers).toEqual(['111', '222']);
+    });
+  });
+
+  // ── Scenario 12: Merge three primaries ────────────────────────────────
+
+  describe('merging three primaries', () => {
+    it('should merge 3 primaries correctly — oldest wins', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'a@test.com',
+          phoneNumber: '111',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+        {
+          id: 5,
+          email: 'b@test.com',
+          phoneNumber: '222',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-02-01'),
+        },
+        {
+          id: 10,
+          email: 'a@test.com',
+          phoneNumber: '222',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-03-01'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: 'a@test.com',
+        phoneNumber: '222',
+      });
+
+      expect(result.contact.primaryContatctId).toBe(1);
+      expect(result.contact.secondaryContactIds).toContain(5);
+      expect(result.contact.secondaryContactIds).toContain(10);
+    });
+  });
+
+  // ── Scenario 13: Null fields in stored contacts ───────────────────────
+
+  describe('null field handling', () => {
+    it('should handle contacts with null email correctly', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: null,
+          phoneNumber: '111',
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: 'new@test.com',
+        phoneNumber: '111',
+      });
+
+      expect(result.contact.primaryContatctId).toBe(1);
+      expect(result.contact.emails).toContain('new@test.com');
+      expect(result.contact.phoneNumbers).toEqual(['111']);
+    });
+
+    it('should handle contacts with null phone correctly', async () => {
+      repo.seed([
+        {
+          id: 1,
+          email: 'existing@test.com',
+          phoneNumber: null,
+          linkPrecedence: LinkPrecedence.PRIMARY,
+          createdAt: new Date('2023-01-01'),
+        },
+      ]);
+
+      const result = await service.identify({
+        email: 'existing@test.com',
+        phoneNumber: '555',
+      });
+
+      expect(result.contact.primaryContatctId).toBe(1);
+      expect(result.contact.phoneNumbers).toContain('555');
+    });
+  });
 });
