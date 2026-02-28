@@ -1,10 +1,11 @@
 /**
  * Express application setup.
- * 
+ *
  * Composition Root: wires up all dependencies (repository → service → controller → routes).
  * This is the only place where concrete implementations are instantiated.
- * 
+ *
  * Security hardening with Helmet, CORS, rate limiting, and body parsing limits.
+ * Interactive Swagger API documentation at /api-docs.
  */
 
 import express, { Application } from 'express';
@@ -12,9 +13,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 
 import { config } from './config';
 import { prisma } from './config/database';
+import { swaggerSpec } from './config/swagger';
 import { ContactRepository } from './repositories/contact.repository';
 import { ContactService } from './services/contact.service';
 import { ContactController } from './controllers/contact.controller';
@@ -26,7 +29,10 @@ export function createApp(): Application {
   const app = express();
 
   // ─── Security middleware ────────────────────────────────────────────────
-  app.use(helmet());
+  app.use(helmet({
+    // Allow Swagger UI to load inline scripts/styles
+    contentSecurityPolicy: false,
+  }));
   app.use(cors());
 
   // ─── Rate limiting ─────────────────────────────────────────────────────
@@ -50,6 +56,18 @@ export function createApp(): Application {
       stream: { write: (message: string) => logger.http(message.trim()) },
     }),
   );
+
+  // ─── Swagger API Documentation ─────────────────────────────────────────
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Bitespeed API Docs',
+  }));
+
+  // Serve raw OpenAPI JSON spec
+  app.get('/api-docs.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
 
   // ─── Health check endpoint ─────────────────────────────────────────────
   app.get('/health', (_req, res) => {

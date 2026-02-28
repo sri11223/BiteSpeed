@@ -26,6 +26,7 @@ async function bootstrap(): Promise<void> {
       logger.info(`🚀 Server running on port ${config.port} in ${config.env} mode`);
       logger.info(`   Health check: http://localhost:${config.port}/health`);
       logger.info(`   Identify:     POST http://localhost:${config.port}/identify`);
+      logger.info(`   API Docs:     http://localhost:${config.port}/api-docs`);
     });
 
     // ─── Graceful shutdown ────────────────────────────────────────────────

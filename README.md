@@ -3,6 +3,7 @@
 A robust backend service that reconciles customer identities across multiple purchases using different contact information (email/phone). Built with **Node.js**, **TypeScript**, **Express**, **Prisma ORM**, and **PostgreSQL**.
 
 > **Live Endpoint:** `https://<your-render-url>/identify`
+> **API Documentation:** `https://<your-render-url>/api-docs`
 
 ---
 
@@ -20,9 +21,10 @@ Customers may use different email addresses and phone numbers across purchases. 
                             │                        │                         │
                       Validation MW          Identity Reconciliation     Prisma + PostgreSQL
                       Error Handler          Link / Merge / Create
+                      Swagger Docs
 ```
 
-### Design Principles
+### Design Principles (SOLID)
 
 | Principle | Application |
 |-----------|-------------|
@@ -32,9 +34,25 @@ Customers may use different email addresses and phone numbers across purchases. 
 | **Interface Segregation** | Minimal, focused interfaces (`IContactService`, `IContactRepository`) |
 | **Dependency Inversion** | Service depends on repository *abstraction*, not Prisma directly |
 
+### Why Prisma ORM (not raw SQL)?
+
+| Factor | Prisma | Raw pg |
+|--------|--------|--------|
+| **Type safety** | Auto-generated from schema — 0 manual mapping errors | Hand-written types, easy to drift from DB |
+| **Migrations** | `prisma migrate` — version-controlled, reversible | Manual `.sql` files, self-managed |
+| **SQL injection** | Impossible — parameterized by default | Must remember `$1` params every time |
+| **Code volume** | ~120 lines for repository | ~250+ lines for same functionality |
+| **Maintenance** | Change schema → types auto-update | Change schema → update SQL + types + mapping |
+
+> **Key insight:** The architecture uses `IContactRepository` interface (Dependency Inversion), so if raw SQL is ever needed for performance-critical queries, just add a new implementation class — zero changes to service or controller layers.
+
 ---
 
-## API
+## API Documentation
+
+### Interactive Swagger UI
+
+Visit **`/api-docs`** for interactive API documentation with examples, try-it-out functionality, and full schema definitions.
 
 ### `POST /identify`
 
@@ -64,6 +82,14 @@ Reconciles a customer identity from email and/or phone number.
 
 Health check endpoint.
 
+### `GET /api-docs`
+
+Interactive Swagger UI documentation.
+
+### `GET /api-docs.json`
+
+Raw OpenAPI 3.0 JSON specification.
+
 ---
 
 ## Getting Started
@@ -77,7 +103,7 @@ Health check endpoint.
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/<your-username>/bitespeed-backend.git
+git clone https://github.com/sri11223/BiteSpeed.git
 cd bitespeed-backend
 
 # 2. Install dependencies
@@ -92,6 +118,8 @@ npx prisma migrate dev --name init
 
 # 5. Start development server (with hot reload)
 npm run dev
+
+# 6. Open API docs at http://localhost:3000/api-docs
 ```
 
 ### Using Docker
@@ -101,6 +129,7 @@ npm run dev
 docker-compose up --build
 
 # The service will be available at http://localhost:3000
+# API docs at http://localhost:3000/api-docs
 ```
 
 ### Running Tests
@@ -117,7 +146,8 @@ npm test
 src/
 ├── config/
 │   ├── index.ts          # Environment config with validation
-│   └── database.ts       # Prisma client singleton
+│   ├── database.ts       # Prisma client singleton + connection management
+│   └── swagger.ts        # OpenAPI 3.0 spec + Swagger configuration
 ├── types/
 │   └── index.ts          # Domain types, interfaces, error classes
 ├── repositories/
@@ -135,6 +165,8 @@ src/
 │   └── logger.ts         # Winston structured logging
 ├── app.ts                # Express app factory (composition root)
 └── server.ts             # Bootstrap & graceful shutdown
+tests/
+└── contact.service.test.ts  # Unit tests with in-memory mock repository
 ```
 
 ---
@@ -172,10 +204,11 @@ Or use the included `render.yaml` for [Blueprint deploys](https://render.com/doc
 |-----------|---------|
 | **Node.js + TypeScript** | Type-safe backend runtime |
 | **Express.js** | Minimal, fast HTTP framework |
-| **Prisma ORM** | Type-safe database access with migrations |
+| **Prisma ORM** | Type-safe database access with auto-migrations |
 | **PostgreSQL** | Relational database for contact storage |
+| **Swagger UI** | Interactive API documentation at `/api-docs` |
 | **Zod** | Runtime request validation |
-| **Winston** | Structured logging (JSON in prod) |
+| **Winston** | Structured logging (JSON in prod, pretty in dev) |
 | **Helmet** | Security headers |
 | **Jest** | Unit testing with in-memory mocks |
 | **Docker** | Containerised deployment |
