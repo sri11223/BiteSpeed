@@ -2,7 +2,9 @@
 
 A full-stack application for reconciling customer identities across multiple purchases. Customers may use different email addresses and phone numbers — this service links them all together into a consolidated view.
 
+> **Assignment:** [Bitespeed Backend Task](https://bitespeed.io/backend-task)  
 > **GitHub:** [sri11223/BiteSpeed](https://github.com/sri11223/BiteSpeed)  
+> **Live Frontend:** [https://bite-speed-henna.vercel.app](https://bite-speed-henna.vercel.app)  
 > **Live API:** [https://bitespeed-1-s82e.onrender.com](https://bitespeed-1-s82e.onrender.com)  
 > **Swagger Docs:** [https://bitespeed-1-s82e.onrender.com/api-docs](https://bitespeed-1-s82e.onrender.com/api-docs)  
 > **Architecture Deep-Dive:** [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -242,18 +244,30 @@ backend/src/
 
 ---
 
-## Deployment (Render.com)
+## Deployment
+
+### Backend — [Render.com](https://render.com)
 
 1. Push code to GitHub
 2. Create a new **Web Service** on Render → connect repo
 3. Set **Root Directory** to `backend`
-4. **Build Command:** `npm ci && npx prisma generate && npx prisma migrate deploy && npm run build`
+4. **Build Command:** `npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build`
 5. **Start Command:** `node dist/server.js`
-6. Add a **PostgreSQL** database on Render
-7. Set `DATABASE_URL` env var from the database connection string
+6. Add a **PostgreSQL** database (or reuse an existing one)
+7. Set `DATABASE_URL` env var to the internal database connection string
 8. Deploy!
 
-Or use `backend/render.yaml` for [Blueprint deploys](https://render.com/docs/blueprint-spec).
+> Live at: https://bitespeed-1-s82e.onrender.com
+
+### Frontend — [Vercel](https://vercel.com)
+
+1. Import the repo on Vercel
+2. Set **Root Directory** to `frontend`
+3. Set **Framework Preset** to Vite
+4. Add env variable `VITE_API_URL` = `https://bitespeed-1-s82e.onrender.com`
+5. Deploy!
+
+> Live at: https://bite-speed-henna.vercel.app
 
 ---
 
