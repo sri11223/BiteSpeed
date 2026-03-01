@@ -69,24 +69,26 @@ export function IdentifyForm({ onSubmit, loading }: IdentifyFormProps) {
       {/* Quick-fill presets */}
       <div className="mt-5 pt-4 border-t border-gray-100">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-          Quick Test Presets
+          Quick Test Presets (from spec)
         </p>
         <div className="flex flex-wrap gap-2">
           {[
-            { email: 'lorraine@hillvalley.edu', phoneNumber: '123456' },
-            { email: 'mcfly@hillvalley.edu', phoneNumber: '123456' },
-            { email: 'george@hillvalley.edu', phoneNumber: '717171' },
-            { email: 'biffsucks@hillvalley.edu', phoneNumber: '919191' },
-            { email: 'doc@hillvalley.edu', phoneNumber: '' },
-            { email: '', phoneNumber: '123456' },
+            { label: '1. New primary', email: 'lorraine@hillvalley.edu', phoneNumber: '123456' },
+            { label: '2. Creates secondary', email: 'mcfly@hillvalley.edu', phoneNumber: '123456' },
+            { label: '3. Phone-only lookup', email: '', phoneNumber: '123456' },
+            { label: '4. Email-only lookup', email: 'mcfly@hillvalley.edu', phoneNumber: '' },
+            { label: '5. George (primary)', email: 'george@hillvalley.edu', phoneNumber: '919191' },
+            { label: '6. Biff (primary)', email: 'biffsucks@hillvalley.edu', phoneNumber: '717171' },
+            { label: '7. Merge primaries!', email: 'george@hillvalley.edu', phoneNumber: '717171' },
           ].map((preset, i) => (
             <button
               key={i}
               type="button"
               onClick={() => handleQuickFill(preset)}
               className="text-xs px-2.5 py-1.5 rounded-md bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
+              title={`${preset.email || '(no email)'} / ${preset.phoneNumber || '(no phone)'}`}
             >
-              {preset.email || '(no email)'} / {preset.phoneNumber || '(no phone)'}
+              {preset.label}
             </button>
           ))}
         </div>
