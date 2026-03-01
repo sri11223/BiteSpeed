@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       '/identify': 'http://localhost:3000',
       '/health': 'http://localhost:3000',
+      '/api-docs': 'http://localhost:3000',
     },
   },
 })

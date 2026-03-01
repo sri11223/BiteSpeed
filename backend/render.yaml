@@ -1,5 +1,8 @@
 # Render.com deployment configuration
 # See: https://render.com/docs/blueprint-spec
+#
+# This deploys from the monorepo — rootDir points to backend/
+# Render auto-creates the PostgreSQL database and injects DATABASE_URL
 
 services:
   - type: web
@@ -7,6 +10,7 @@ services:
     runtime: node
     region: oregon
     plan: free
+    rootDir: backend
     buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: node dist/server.js
     envVars:
