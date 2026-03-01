@@ -1,6 +1,8 @@
 import type { IdentifyRequest, IdentifyResponse, HealthResponse } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// Dev: VITE_API_URL is empty → uses Vite proxy (same-origin)
+// Prod build: .env.production sets VITE_API_URL to the Render backend URL
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
 
 export async function identifyContact(data: IdentifyRequest): Promise<IdentifyResponse> {
   const body: Record<string, unknown> = {};

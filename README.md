@@ -2,8 +2,9 @@
 
 A full-stack application for reconciling customer identities across multiple purchases. Customers may use different email addresses and phone numbers — this service links them all together into a consolidated view.
 
-> **Assignment:** [Bitespeed Backend Task](https://bitespeed.io/backend-task)  
 > **GitHub:** [sri11223/BiteSpeed](https://github.com/sri11223/BiteSpeed)  
+> **Live API:** [https://bitespeed-1-s82e.onrender.com](https://bitespeed-1-s82e.onrender.com)  
+> **Swagger Docs:** [https://bitespeed-1-s82e.onrender.com/api-docs](https://bitespeed-1-s82e.onrender.com/api-docs)  
 > **Architecture Deep-Dive:** [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---

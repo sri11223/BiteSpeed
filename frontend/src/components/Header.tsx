@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { checkHealth } from '../services/api';
 
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
+
 export function Header() {
   const [healthy, setHealthy] = useState<boolean | null>(null);
 
@@ -52,7 +54,7 @@ export function Header() {
               </span>
             </div>
             <a
-              href="/api-docs"
+              href={`${API_BASE}/api-docs`}
               target="_blank"
               rel="noopener noreferrer"
               className="ml-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
