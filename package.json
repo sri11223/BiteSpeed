@@ -1,24 +1,15 @@
 {
-  "name": "bitespeed-backend",
+  "name": "bitespeed-identity-reconciliation",
   "version": "1.0.0",
-  "description": "Bitespeed Identity Reconciliation Service - Links customer identities across multiple purchases",
-  "main": "dist/server.js",
+  "private": true,
+  "description": "Bitespeed Identity Reconciliation - Full-stack monorepo (backend + frontend)",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:generate": "prisma generate",
-    "db:studio": "prisma studio",
-    "test": "jest --coverage --forceExit --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:integration": "jest --testPathPattern=integration --coverage --forceExit --detectOpenHandles",
-    "test:unit": "jest --testPathPattern=contact.service.test --coverage --forceExit --detectOpenHandles",
-    "load-test": "npx ts-node scripts/load-test.ts",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "postinstall": "prisma generate"
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "cd backend && npm test",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": [
     "bitespeed",
@@ -26,40 +17,5 @@
     "contact-linking"
   ],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "express-rate-limit": "^7.4.1",
-    "helmet": "^8.0.0",
-    "morgan": "^1.10.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "winston": "^3.15.0",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/autocannon": "^7.12.7",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/jest": "^29.5.14",
-    "@types/morgan": "^1.9.9",
-    "@types/node": "^22.9.0",
-    "@types/supertest": "^7.2.0",
-    "@types/swagger-jsdoc": "^6.0.4",
-    "@types/swagger-ui-express": "^4.1.7",
-    "autocannon": "^8.0.0",
-    "jest": "^29.7.0",
-    "prisma": "^5.22.0",
-    "supertest": "^7.2.2",
-    "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.6.3"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "license": "ISC"
 }

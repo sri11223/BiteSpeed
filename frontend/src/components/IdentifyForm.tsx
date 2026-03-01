@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Button, Input, Card } from './ui';
 import type { IdentifyRequest } from '../types';
 
